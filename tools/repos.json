@@ -262,13 +262,69 @@
       },
       "open_pull_requests_limit": 5,
       "commit_message": {
-        "prefix": "deps",
-        "include": "scope"
+        "include_scope": true
       },
-      "labels": ["area/deps"],
-      "groups": {
-        "all-dependencies": {
-          "patterns": ["*"]
+      "ecosystems": {
+        "cargo": {
+          "labels": ["area/deps"],
+          "commit_prefix": "deps",
+          "groups": {
+            "rust-minor-patch": {
+              "patterns": ["*"],
+              "update-types": ["minor", "patch"]
+            }
+          }
+        },
+        "npm": {
+          "labels": ["area/deps"],
+          "commit_prefix": "deps",
+          "groups": {
+            "npm-minor-patch": {
+              "patterns": ["*"],
+              "update-types": ["minor", "patch"]
+            },
+            "npm-dev": {
+              "patterns": ["*"],
+              "dependency-type": "development"
+            }
+          }
+        },
+        "github-actions": {
+          "labels": ["area/deps", "area/ci"],
+          "commit_prefix": "ci",
+          "groups": {
+            "github-actions": {
+              "patterns": ["*"]
+            }
+          }
+        },
+        "docker": {
+          "labels": ["area/deps", "area/docker"],
+          "commit_prefix": "docker",
+          "open_pull_requests_limit": 3,
+          "groups": {
+            "docker-images": {
+              "patterns": ["*"]
+            }
+          }
+        },
+        "gomod": {
+          "labels": ["area/deps"],
+          "commit_prefix": "deps",
+          "groups": {
+            "go-dependencies": {
+              "patterns": ["*"]
+            }
+          }
+        },
+        "terraform": {
+          "labels": ["area/deps"],
+          "commit_prefix": "deps",
+          "groups": {
+            "terraform-providers": {
+              "patterns": ["*"]
+            }
+          }
         }
       }
     }
@@ -396,7 +452,17 @@
         "wasm",
         "caching"
       ],
-      "ecosystems": ["cargo", "github-actions"]
+      "ecosystems": ["cargo", "github-actions", "docker"],
+      "dependabot": {
+        "cargo": {
+          "ignore": [
+            { "dependency-name": "wasmtime*", "update-types": ["version-update:semver-major"] },
+            { "dependency-name": "foundationdb", "update-types": ["version-update:semver-major"] },
+            { "dependency-name": "tonic", "update-types": ["version-update:semver-major"] },
+            { "dependency-name": "prost", "update-types": ["version-update:semver-major"] }
+          ]
+        }
+      }
     },
 
     "inferadb/control": {
@@ -444,7 +510,22 @@
         "rest-api",
         "jwt"
       ],
-      "ecosystems": ["cargo", "github-actions"]
+      "ecosystems": ["cargo", "github-actions", "docker"],
+      "dependabot": {
+        "cargo": {
+          "ignore": [
+            { "dependency-name": "foundationdb", "update-types": ["version-update:semver-major"] },
+            { "dependency-name": "tonic", "update-types": ["version-update:semver-major"] },
+            { "dependency-name": "prost", "update-types": ["version-update:semver-major"] }
+          ]
+        },
+        "docker": {
+          "directories": [
+            { "path": "/" },
+            { "path": "/docker/fdb-integration-tests", "schedule": { "interval": "daily" } }
+          ]
+        }
+      }
     },
 
     "inferadb/dashboard": {
@@ -598,7 +679,15 @@
         "crossterm"
       ],
       "skip_common_topics": true,
-      "ecosystems": ["cargo", "github-actions"]
+      "ecosystems": ["cargo", "github-actions"],
+      "dependabot": {
+        "cargo": {
+          "ignore": [
+            { "dependency-name": "crossterm", "update-types": ["version-update:semver-major"] },
+            { "dependency-name": "tokio", "update-types": ["version-update:semver-major"] }
+          ]
+        }
+      }
     },
 
     "inferadb/terraform-provider-inferadb": {
@@ -647,7 +736,17 @@
         "tokio",
         "derive-macro"
       ],
-      "ecosystems": ["cargo", "github-actions"]
+      "ecosystems": ["cargo", "github-actions"],
+      "dependabot": {
+        "cargo": {
+          "ignore": [
+            { "dependency-name": "tonic", "update-types": ["version-update:semver-major"] },
+            { "dependency-name": "prost", "update-types": ["version-update:semver-major"] },
+            { "dependency-name": "reqwest", "update-types": ["version-update:semver-major"] },
+            { "dependency-name": "tokio", "update-types": ["version-update:semver-major"] }
+          ]
+        }
+      }
     },
 
     "inferadb/proto": {

@@ -730,7 +730,201 @@ cleanup_topics() {
 # Dependabot Functions
 # =============================================================================
 
-# Validate dependabot.yml exists and has required ecosystem entries
+# Generate dependabot.yml content for a repository based on its ecosystems
+generate_dependabot_yml() {
+    local repo="$1"
+
+    # Get configured ecosystems for this repo
+    local ecosystems_json
+    ecosystems_json=$(jq -c --arg repo "$repo" '
+        .repositories[$repo].ecosystems // []
+    ' "$CONFIG_FILE")
+
+    local ecosystem_count
+    ecosystem_count=$(echo "$ecosystems_json" | jq 'length')
+
+    if [[ "$ecosystem_count" -eq 0 ]]; then
+        echo ""
+        return
+    fi
+
+    # Newline variable for proper YAML array formatting in bash substitution
+    local NL=$'\n'
+
+    # Get common schedule settings
+    local schedule_interval schedule_day schedule_time schedule_timezone default_limit include_scope
+    schedule_interval=$(jq -r '.common.dependabot.schedule.interval' "$CONFIG_FILE")
+    schedule_day=$(jq -r '.common.dependabot.schedule.day' "$CONFIG_FILE")
+    schedule_time=$(jq -r '.common.dependabot.schedule.time' "$CONFIG_FILE")
+    schedule_timezone=$(jq -r '.common.dependabot.schedule.timezone' "$CONFIG_FILE")
+    default_limit=$(jq -r '.common.dependabot.open_pull_requests_limit' "$CONFIG_FILE")
+    include_scope=$(jq -r '.common.dependabot.commit_message.include_scope // false' "$CONFIG_FILE")
+
+    # Get per-repo dependabot overrides
+    local repo_dependabot
+    repo_dependabot=$(jq -c --arg repo "$repo" '.repositories[$repo].dependabot // {}' "$CONFIG_FILE")
+
+    # Start YAML content
+    local content=""
+    content+="# yaml-language-server: \$schema=https://json.schemastore.org/dependabot-2.0.json
+#
+# Dependabot configuration for ${repo}
+# Managed by github/tools/repos.sh - manual edits will be overwritten
+#
+# To customize: update repos.json and run ./repos.sh --dependabot
+
+version: 2
+updates:"
+
+    # Generate entry for each ecosystem
+    while IFS= read -r ecosystem; do
+        [[ -z "$ecosystem" ]] && continue
+
+        # Get ecosystem-specific config from common settings
+        local labels commit_prefix pr_limit groups_json
+        labels=$(jq -r --arg eco "$ecosystem" '.common.dependabot.ecosystems[$eco].labels // ["area/deps"] | map("\"" + . + "\"") | join(", ")' "$CONFIG_FILE")
+        commit_prefix=$(jq -r --arg eco "$ecosystem" '.common.dependabot.ecosystems[$eco].commit_prefix // "deps"' "$CONFIG_FILE")
+        pr_limit=$(jq -r --arg eco "$ecosystem" --arg def "$default_limit" '.common.dependabot.ecosystems[$eco].open_pull_requests_limit // $def' "$CONFIG_FILE")
+        groups_json=$(jq -c --arg eco "$ecosystem" '.common.dependabot.ecosystems[$eco].groups // {}' "$CONFIG_FILE")
+
+        # Get per-repo overrides for this ecosystem
+        local repo_eco_config directories_json ignore_json
+        repo_eco_config=$(echo "$repo_dependabot" | jq -c --arg eco "$ecosystem" '.[$eco] // {}')
+        directories_json=$(echo "$repo_eco_config" | jq -c '.directories // null')
+        ignore_json=$(echo "$repo_eco_config" | jq -c '.ignore // null')
+
+        # Determine directories to process
+        local directories=()
+        local dir_schedules=()
+        if [[ "$directories_json" != "null" ]]; then
+            # Use per-repo directory overrides
+            while IFS= read -r dir_entry; do
+                [[ -z "$dir_entry" ]] && continue
+                local dir_path dir_schedule
+                dir_path=$(echo "$dir_entry" | jq -r '.path // "/"')
+                dir_schedule=$(echo "$dir_entry" | jq -c '.schedule // null')
+                directories+=("$dir_path")
+                dir_schedules+=("$dir_schedule")
+            done < <(echo "$directories_json" | jq -c '.[]')
+        else
+            # Use default directory based on ecosystem
+            if [[ "$ecosystem" == "github-actions" ]]; then
+                directories=("/.github/workflows")
+            else
+                directories=("/")
+            fi
+            dir_schedules=("null")
+        fi
+
+        # Generate entry for each directory
+        local dir_index=0
+        for directory in "${directories[@]}"; do
+            local dir_schedule_override="${dir_schedules[$dir_index]}"
+            ((dir_index++))
+
+            # Determine schedule (use override or default)
+            local use_interval use_day use_time use_timezone
+            if [[ "$dir_schedule_override" != "null" ]]; then
+                use_interval=$(echo "$dir_schedule_override" | jq -r '.interval // "'"$schedule_interval"'"')
+                use_day=$(echo "$dir_schedule_override" | jq -r '.day // "'"$schedule_day"'"')
+                use_time=$(echo "$dir_schedule_override" | jq -r '.time // "'"$schedule_time"'"')
+                use_timezone=$(echo "$dir_schedule_override" | jq -r '.timezone // "'"$schedule_timezone"'"')
+            else
+                use_interval="$schedule_interval"
+                use_day="$schedule_day"
+                use_time="$schedule_time"
+                use_timezone="$schedule_timezone"
+            fi
+
+            content+="
+
+  - package-ecosystem: \"${ecosystem}\"
+    directory: \"${directory}\"
+    schedule:
+      interval: \"${use_interval}\""
+
+            # Only add day/time for weekly schedule
+            if [[ "$use_interval" == "weekly" ]]; then
+                content+="
+      day: \"${use_day}\"
+      time: \"${use_time}\"
+      timezone: \"${use_timezone}\""
+            elif [[ "$use_interval" == "daily" ]]; then
+                content+="
+      time: \"${use_time}\"
+      timezone: \"${use_timezone}\""
+            fi
+
+            content+="
+    open-pull-requests-limit: ${pr_limit}
+    labels:
+      - ${labels//\", \"/\"$NL      - \"}
+    commit-message:
+      prefix: \"${commit_prefix}\""
+
+            # Add include: scope if configured
+            if [[ "$include_scope" == "true" ]]; then
+                content+="
+      include: \"scope\""
+            fi
+
+            # Add ignore rules if configured (only for first directory to avoid repetition)
+            if [[ "$ignore_json" != "null" && "$dir_index" -eq 1 ]]; then
+                content+="
+    ignore:"
+                while IFS= read -r ignore_entry; do
+                    [[ -z "$ignore_entry" ]] && continue
+                    local dep_name update_types_arr
+                    dep_name=$(echo "$ignore_entry" | jq -r '."dependency-name"')
+                    update_types_arr=$(echo "$ignore_entry" | jq -r '."update-types" // [] | map("\"" + . + "\"") | join(", ")')
+                    content+="
+      - dependency-name: \"${dep_name}\""
+                    if [[ -n "$update_types_arr" && "$update_types_arr" != "" ]]; then
+                        content+="
+        update-types:
+          - ${update_types_arr//\", \"/\"$NL          - \"}"
+                    fi
+                done < <(echo "$ignore_json" | jq -c '.[]')
+            fi
+
+            # Add groups if configured (only for first directory)
+            if [[ "$groups_json" != "{}" && "$dir_index" -eq 1 ]]; then
+                content+="
+    groups:"
+                while IFS= read -r group_name; do
+                    [[ -z "$group_name" ]] && continue
+                    local patterns update_types dep_type
+                    patterns=$(echo "$groups_json" | jq -r --arg g "$group_name" '.[$g].patterns // ["*"] | map("\"" + . + "\"") | join(", ")')
+                    update_types=$(echo "$groups_json" | jq -r --arg g "$group_name" '.[$g]["update-types"] // null')
+                    dep_type=$(echo "$groups_json" | jq -r --arg g "$group_name" '.[$g]["dependency-type"] // null')
+
+                    content+="
+      ${group_name}:
+        patterns:
+          - ${patterns//\", \"/\"$NL          - \"}"
+
+                    if [[ "$update_types" != "null" ]]; then
+                        local ut_formatted
+                        ut_formatted=$(echo "$update_types" | jq -r 'map("\"" + . + "\"") | join(", ")')
+                        content+="
+        update-types:
+          - ${ut_formatted//\", \"/\"$NL          - \"}"
+                    fi
+
+                    if [[ "$dep_type" != "null" ]]; then
+                        content+="
+        dependency-type: \"${dep_type}\""
+                    fi
+                done < <(echo "$groups_json" | jq -r 'keys[]')
+            fi
+        done
+
+    done < <(echo "$ecosystems_json" | jq -r '.[]')
+
+    echo "$content"
+}
+
+# Sync dependabot.yml to repository
 process_dependabot() {
     local repo="$1"
 
@@ -751,52 +945,79 @@ process_dependabot() {
         return
     fi
 
-    # Fetch dependabot.yml from repo
-    local api_response
-    local file_content=""
+    # Generate expected content
+    local generated_content
+    generated_content=$(generate_dependabot_yml "$repo")
 
-    if api_response=$(gh api "repos/$repo/contents/.github/dependabot.yml" 2>/dev/null); then
-        file_content=$(echo "$api_response" | jq -r '.content' | base64 -d 2>/dev/null || true)
-    fi
-
-    if [[ -z "$file_content" ]]; then
-        local required_list
-        required_list=$(echo "$ecosystems_json" | jq -r 'join(", ")')
-        echo "  ⚠ Missing dependabot.yml"
-        echo "    Required ecosystems: $required_list"
-        add_warning "$repo" "dependabot" "missing dependabot.yml (needs: $required_list)"
+    if [[ -z "$generated_content" ]]; then
+        echo "  ✓ No dependabot config needed"
         return
     fi
 
-    echo "  ✓ dependabot.yml exists"
+    # Get current file from repo (if exists)
+    local api_response remote_sha current_content
+    remote_sha=""
+    current_content=""
 
-    # Check for each configured ecosystem in the file
-    local missing_ecosystems=""
-    local found_ecosystems=""
+    if api_response=$(gh api "repos/$repo/contents/.github/dependabot.yml" 2>/dev/null); then
+        remote_sha=$(echo "$api_response" | jq -r '.sha // empty')
+        current_content=$(echo "$api_response" | jq -r '.content' | base64 -d 2>/dev/null || true)
+    fi
 
+    # Compare content (normalize whitespace for comparison)
+    local generated_normalized current_normalized
+    generated_normalized=$(echo "$generated_content" | sed 's/[[:space:]]*$//' | sed '/^$/d')
+    current_normalized=$(echo "$current_content" | sed 's/[[:space:]]*$//' | sed '/^$/d')
+
+    if [[ "$generated_normalized" == "$current_normalized" ]]; then
+        echo "  ✓ dependabot.yml is up to date"
+        # List ecosystems
+        while IFS= read -r ecosystem; do
+            [[ -z "$ecosystem" ]] && continue
+            echo "    ✓ $ecosystem"
+        done < <(echo "$ecosystems_json" | jq -r '.[]')
+        return
+    fi
+
+    # Content differs - need to sync
+    if [[ -z "$remote_sha" ]]; then
+        echo "  + dependabot.yml (creating)"
+    else
+        echo "  ~ dependabot.yml (updating)"
+    fi
+
+    # List ecosystems being configured
     while IFS= read -r ecosystem; do
         [[ -z "$ecosystem" ]] && continue
-
-        # Check if this ecosystem is defined in the dependabot.yml
-        # Look for 'package-ecosystem: "ecosystem"' or 'package-ecosystem: ecosystem'
-        if echo "$file_content" | grep -qE "package-ecosystem:[[:space:]]*[\"']?${ecosystem}[\"']?"; then
-            found_ecosystems=$(list_add "$found_ecosystems" "$ecosystem")
-        else
-            missing_ecosystems=$(list_add "$missing_ecosystems" "$ecosystem")
-        fi
+        echo "    → $ecosystem"
     done < <(echo "$ecosystems_json" | jq -r '.[]')
 
-    # Report findings
-    while IFS= read -r ecosystem; do
-        [[ -z "$ecosystem" ]] && continue
-        echo "    ✓ $ecosystem"
-    done <<< "$found_ecosystems"
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "    [dry-run] would sync .github/dependabot.yml"
+        return
+    fi
 
-    while IFS= read -r ecosystem; do
-        [[ -z "$ecosystem" ]] && continue
-        echo "    ⚠ Missing: $ecosystem"
-        add_warning "$repo" "dependabot" "missing ecosystem: $ecosystem"
-    done <<< "$missing_ecosystems"
+    # Push file via GitHub API
+    # Note: Use tr -d '\n' for cross-platform compatibility (GNU base64 wraps at 76 chars)
+    local encoded_content
+    encoded_content=$(printf '%s' "$generated_content" | base64 | tr -d '\n')
+
+    local api_args=(-X PUT "repos/$repo/contents/.github/dependabot.yml")
+    api_args+=(-f "message=chore: sync dependabot.yml from repos.json config")
+    api_args+=(-f "content=$encoded_content")
+    [[ -n "$remote_sha" ]] && api_args+=(-f "sha=$remote_sha")
+
+    local result cmd_status=0
+    result=$(gh api "${api_args[@]}" 2>&1) || cmd_status=$?
+
+    if [[ $cmd_status -eq 0 ]]; then
+        echo "    ✓ Synced"
+    else
+        local error_msg
+        error_msg=$(echo "$result" | jq -r '.message // empty' 2>/dev/null || echo "$result" | head -1 | cut -c1-50)
+        echo "    ⚠ Failed: $error_msg"
+        add_warning "$repo" "dependabot" "sync failed - $error_msg"
+    fi
 }
 
 # =============================================================================
@@ -827,8 +1048,9 @@ sync_template_file() {
     local filename="$3"
 
     # Get local file content as base64
+    # Note: Use tr -d '\n' for cross-platform compatibility (GNU base64 wraps at 76 chars)
     local local_content
-    local_content=$(base64 < "$local_path")
+    local_content=$(base64 < "$local_path" | tr -d '\n')
 
     # Calculate local file's git blob SHA
     local local_size
