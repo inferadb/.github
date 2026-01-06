@@ -924,6 +924,29 @@ process_templates() {
 
         sync_template_file "$repo" "$template_file" "$filename"
     done
+
+    # Check for required files (repo-specific, not synced from templates)
+    check_required_files "$repo"
+}
+
+# Check that required repo-specific files exist
+check_required_files() {
+    local repo="$1"
+
+    echo ""
+    echo "  Required Files:"
+
+    local required_files="README.md"
+
+    for filename in $required_files; do
+        # Check if file exists in repo
+        if gh api "repos/$repo/contents/$filename" --silent 2>/dev/null; then
+            echo "  ✓ $filename"
+        else
+            echo "  ⚠ $filename (missing)"
+            add_warning "$repo" "required-files" "$filename is missing"
+        fi
+    done
 }
 
 # =============================================================================
