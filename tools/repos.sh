@@ -163,7 +163,7 @@ run_cmd() {
         echo "    [dry-run] $*"
         return 0
     fi
-    "$@"
+    "$@" > /dev/null
 }
 
 # Reset allowlists for new repository
