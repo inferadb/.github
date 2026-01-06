@@ -994,6 +994,11 @@ process_dependabot() {
 
     if [[ "$DRY_RUN" == "true" ]]; then
         echo "    [dry-run] would sync .github/dependabot.yml"
+        echo ""
+        echo "    ┌─── Preview ───────────────────────────────────────────"
+        # Indent each line of the generated content
+        echo "$generated_content" | sed 's/^/    │ /'
+        echo "    └──────────────────────────────────────────────────────"
         return
     fi
 
