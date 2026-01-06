@@ -555,7 +555,7 @@
         "dashboard",
         "web-ui"
       ],
-      "ecosystems": ["npm", "github-actions"]
+      "ecosystems": ["npm", "github-actions", "docker"]
     },
 
     "inferadb/tests": {
