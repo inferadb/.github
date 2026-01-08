@@ -3,32 +3,20 @@
 set -euo pipefail
 
 # =============================================================================
-# Repository Metadata Management Script
+# Repository Manager
 # =============================================================================
-# Manages GitHub repository settings, labels, descriptions, and topics across
-# all InferaDB repositories using repos.json configuration.
-#
-# Features:
-#   - Single source of truth (repos.json)
-#   - Repository settings (merge options, security, features)
-#   - Allowlist-based cleanup (removes unlisted labels/topics)
-#   - Template file sync (LICENSE, SECURITY.md, etc.)
-#   - Idempotent operations (safe to run repeatedly)
-#   - macOS compatible (works with Bash 3.2+)
+# Syncs GitHub repo settings, labels, topics, and templates from repos.json.
+# Idempotent. macOS/Linux compatible.
 #
 # Usage:
-#   ./repos.sh              # Process all repositories (settings, labels, topics, templates)
-#   ./repos.sh --settings   # Only process repository settings
-#   ./repos.sh --labels     # Only process labels
-#   ./repos.sh --topics     # Only process descriptions and topics
-#   ./repos.sh --dependabot # Validate dependabot.yml configuration
-#   ./repos.sh --templates  # Sync template files from tools/templates/
-#   ./repos.sh --dry-run    # Show what would be done without making changes
-#
-# Combine flags:
-#   ./repos.sh --labels --topics          # Labels and topics, no settings
-#   ./repos.sh --settings --dry-run       # Preview settings changes only
-#   ./repos.sh --templates --dry-run      # Preview template sync changes
+#   ./repos.sh                    # Sync everything
+#   ./repos.sh --settings         # Settings only
+#   ./repos.sh --labels           # Labels only
+#   ./repos.sh --topics           # Descriptions and topics only
+#   ./repos.sh --dependabot       # Dependabot config only
+#   ./repos.sh --templates        # Template files only
+#   ./repos.sh --dry-run          # Preview changes
+#   ./repos.sh --labels --dry-run # Combine flags
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -91,16 +79,15 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --settings   Process repository settings (merge, security, features)"
-            echo "  --labels     Process issue labels"
-            echo "  --topics     Process descriptions and topics"
-            echo "  --dependabot Validate dependabot.yml has required ecosystems"
-            echo "  --templates  Sync template files from tools/templates/"
-            echo "  --dry-run    Show what would change without making changes"
-            echo "  -h, --help   Show this help message"
+            echo "  --settings   Repo settings (merge, security, features)"
+            echo "  --labels     Issue labels"
+            echo "  --topics     Descriptions and topics"
+            echo "  --dependabot Sync dependabot.yml"
+            echo "  --templates  Sync template files"
+            echo "  --dry-run    Preview without changes"
+            echo "  -h, --help   Show help"
             echo ""
-            echo "If no options specified, processes everything."
-            echo "Multiple options can be combined: --settings --labels"
+            echo "No options = sync everything. Flags combine: --settings --labels"
             exit 0
             ;;
         *)
@@ -129,22 +116,18 @@ if ! jq empty "$CONFIG_FILE" 2>/dev/null; then
     exit 1
 fi
 
-# =============================================================================
-# Newline-separated lists for lookups (Bash 3.2 compatible)
-# =============================================================================
+# Newline-separated lists (Bash 3.2 compatible)
 ALLOWED_LABELS=""
 ALLOWED_TOPICS=""
 EXISTING_LABELS=""
 EXISTING_LABELS_JSON=""
 EXISTING_TOPICS=""
 
-# =============================================================================
-# Warning Collection (for end-of-run summary)
-# =============================================================================
+# Warning collection
 WARNINGS=""
 WARNING_COUNT=0
 
-# Add a warning to the collection
+# Add warning
 add_warning() {
     local repo="$1"
     local category="$2"
@@ -153,11 +136,9 @@ add_warning() {
     ((WARNING_COUNT++)) || true
 }
 
-# =============================================================================
-# Helper Functions
-# =============================================================================
+# Helpers
 
-# Execute or print command based on dry-run mode
+# Execute or print (dry-run mode)
 run_cmd() {
     if [[ "$DRY_RUN" == "true" ]]; then
         echo "    [dry-run] $*"
@@ -166,20 +147,20 @@ run_cmd() {
     "$@" > /dev/null
 }
 
-# Reset allowlists for new repository
+# Reset allowlists
 reset_allowlists() {
     ALLOWED_LABELS=""
     ALLOWED_TOPICS=""
 }
 
-# Check if item exists in newline-separated list
+# List membership check
 list_contains() {
     local list="$1"
     local item="$2"
     echo "$list" | grep -qxF "$item"
 }
 
-# Add item to newline-separated list
+# List append
 list_add() {
     local list="$1"
     local item="$2"
@@ -190,11 +171,9 @@ list_add() {
     fi
 }
 
-# =============================================================================
-# Settings Functions
-# =============================================================================
+# Settings
 
-# Map config key to gh repo edit flag
+# Config key → gh flag
 get_gh_flag() {
     local key="$1"
     case "$key" in
@@ -229,7 +208,7 @@ get_gh_flag() {
     esac
 }
 
-# Map config key to GitHub API field name
+# Config key → API field
 get_api_field() {
     local key="$1"
     case "$key" in
@@ -262,7 +241,7 @@ get_api_field() {
     esac
 }
 
-# Get current value from fetched repo settings
+# Get current setting value
 get_current_setting() {
     local key="$1"
     local api_field
@@ -292,7 +271,7 @@ get_current_setting() {
     fi
 }
 
-# Apply a single setting (with error handling to continue on failure)
+# Apply setting (continues on failure)
 apply_setting() {
     local repo="$1"
     local key="$2"
@@ -503,8 +482,7 @@ process_settings() {
     apply_merge_commit_settings "$repo" "$repo_settings"
 }
 
-# Apply merge commit title/message settings in a single API call
-# These settings must be sent together to maintain valid combinations
+# Apply merge commit settings (batched for valid combinations)
 apply_merge_commit_settings() {
     local repo="$1"
     local repo_settings="$2"
@@ -618,9 +596,7 @@ apply_merge_commit_settings() {
     fi
 }
 
-# =============================================================================
-# Label Functions
-# =============================================================================
+# Labels
 
 get_label_info() {
     local name="$1"
@@ -688,9 +664,7 @@ cleanup_labels() {
     fi
 }
 
-# =============================================================================
-# Topic Functions
-# =============================================================================
+# Topics
 
 ensure_topic() {
     local repo="$1"
@@ -726,11 +700,9 @@ cleanup_topics() {
     fi
 }
 
-# =============================================================================
-# Dependabot Functions
-# =============================================================================
+# Dependabot
 
-# Generate dependabot.yml content for a repository based on its ecosystems
+# Generate dependabot.yml content
 generate_dependabot_yml() {
     local repo="$1"
 
@@ -767,11 +739,8 @@ generate_dependabot_yml() {
     # Start YAML content
     local content=""
     content+="# yaml-language-server: \$schema=https://json.schemastore.org/dependabot-2.0.json
-#
-# Dependabot configuration for ${repo}
-# Managed by github/tools/repos.sh - manual edits will be overwritten
-#
-# To customize: update repos.json and run ./repos.sh --dependabot
+# Managed by github/tools/repos.sh - edits will be overwritten
+# Customize via repos.json, then run ./repos.sh --dependabot
 
 version: 2
 updates:"
@@ -924,7 +893,7 @@ updates:"
     echo "$content"
 }
 
-# Sync dependabot.yml to repository
+# Sync dependabot.yml
 process_dependabot() {
     local repo="$1"
 
@@ -941,7 +910,7 @@ process_dependabot() {
     ecosystem_count=$(echo "$ecosystems_json" | jq 'length')
 
     if [[ "$ecosystem_count" -eq 0 ]]; then
-        echo "  ✓ No ecosystems configured (skipping)"
+        echo "  ✓ No ecosystems configured"
         return
     fi
 
@@ -950,7 +919,7 @@ process_dependabot() {
     generated_content=$(generate_dependabot_yml "$repo")
 
     if [[ -z "$generated_content" ]]; then
-        echo "  ✓ No dependabot config needed"
+        echo "  ✓ No config needed"
         return
     fi
 
@@ -970,7 +939,7 @@ process_dependabot() {
     current_normalized=$(echo "$current_content" | sed 's/[[:space:]]*$//' | sed '/^$/d')
 
     if [[ "$generated_normalized" == "$current_normalized" ]]; then
-        echo "  ✓ dependabot.yml is up to date"
+        echo "  ✓ dependabot.yml up to date"
         # List ecosystems
         while IFS= read -r ecosystem; do
             [[ -z "$ecosystem" ]] && continue
@@ -993,7 +962,7 @@ process_dependabot() {
     done < <(echo "$ecosystems_json" | jq -r '.[]')
 
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo "    [dry-run] would sync .github/dependabot.yml"
+        echo "    [dry-run] sync .github/dependabot.yml"
         echo ""
         echo "    ┌─── Preview ───────────────────────────────────────────"
         # Indent each line of the generated content
@@ -1025,9 +994,7 @@ process_dependabot() {
     fi
 }
 
-# =============================================================================
-# Description Function
-# =============================================================================
+# Description
 
 ensure_description() {
     local repo="$1"
@@ -1042,11 +1009,9 @@ ensure_description() {
     fi
 }
 
-# =============================================================================
-# Template Functions
-# =============================================================================
+# Templates
 
-# Sync a single template file to a repository
+# Sync template file
 sync_template_file() {
     local repo="$1"
     local local_path="$2"
@@ -1106,7 +1071,7 @@ sync_template_file() {
     fi
 }
 
-# Process all template files for a repository
+# Process templates
 process_templates() {
     local repo="$1"
 
@@ -1121,8 +1086,8 @@ process_templates() {
     # Find template files directory
     local templates_dir="$SCRIPT_DIR/templates"
     if [[ ! -d "$templates_dir" ]]; then
-        echo "  ⚠ Templates directory not found: $templates_dir"
-        add_warning "$repo" "templates" "templates directory not found"
+        echo "  ⚠ Templates dir not found: $templates_dir"
+        add_warning "$repo" "templates" "templates dir not found"
         return
     fi
 
@@ -1156,7 +1121,7 @@ process_templates() {
     check_required_files "$repo"
 }
 
-# Check that required repo-specific files exist
+# Check required files
 check_required_files() {
     local repo="$1"
 
@@ -1176,9 +1141,7 @@ check_required_files() {
     done
 }
 
-# =============================================================================
-# Main Processing Function
-# =============================================================================
+# Main
 
 process_repository() {
     local repo="$1"
@@ -1190,22 +1153,16 @@ process_repository() {
 
     reset_allowlists
 
-    # -------------------------------------------------------------------------
-    # Get repository configuration
-    # -------------------------------------------------------------------------
+    # Get config
     local repo_config
     repo_config=$(jq -c --arg repo "$repo" '.repositories[$repo]' "$CONFIG_FILE")
 
-    # -------------------------------------------------------------------------
-    # Process Settings
-    # -------------------------------------------------------------------------
+    # Settings
     if [[ "$DO_SETTINGS" == "true" ]]; then
         process_settings "$repo"
     fi
 
-    # -------------------------------------------------------------------------
-    # Fetch existing labels/topics data
-    # -------------------------------------------------------------------------
+    # Fetch existing data
     local repo_json description_text
 
     if [[ "$DO_LABELS" == "true" ]]; then
@@ -1219,9 +1176,7 @@ process_repository() {
         description_text=$(echo "$repo_json" | jq -r '.description // ""')
     fi
 
-    # -------------------------------------------------------------------------
-    # Process Labels
-    # -------------------------------------------------------------------------
+    # Labels
     if [[ "$DO_LABELS" == "true" ]]; then
         echo ""
         echo "  Labels:"
@@ -1251,9 +1206,7 @@ process_repository() {
         cleanup_labels "$repo"
     fi
 
-    # -------------------------------------------------------------------------
-    # Process Description and Topics
-    # -------------------------------------------------------------------------
+    # Description and Topics
     if [[ "$DO_TOPICS" == "true" ]]; then
         local target_description skip_common
         target_description=$(echo "$repo_config" | jq -r '.description')
@@ -1285,24 +1238,18 @@ process_repository() {
         cleanup_topics "$repo"
     fi
 
-    # -------------------------------------------------------------------------
-    # Process Dependabot
-    # -------------------------------------------------------------------------
+    # Dependabot
     if [[ "$DO_DEPENDABOT" == "true" ]]; then
         process_dependabot "$repo"
     fi
 
-    # -------------------------------------------------------------------------
-    # Process Templates
-    # -------------------------------------------------------------------------
+    # Templates
     if [[ "$DO_TEMPLATES" == "true" ]]; then
         process_templates "$repo"
     fi
 }
 
-# =============================================================================
-# Main Execution
-# =============================================================================
+# Execution
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════════════════╗"
@@ -1317,7 +1264,7 @@ echo "  Dependabot: $DO_DEPENDABOT"
 echo "  Templates:  $DO_TEMPLATES"
 echo "  Dry Run:    $DRY_RUN"
 echo ""
-echo "  Requires:   gh CLI authenticated with repo admin permissions"
+echo "  Requires:   gh CLI with repo admin access"
 
 # Read repository list
 REPOS=$(jq -r '.repositories | keys[]' "$CONFIG_FILE")
@@ -1333,12 +1280,10 @@ done <<< "$REPOS"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Done! Processed $REPO_COUNT repositories."
+echo "  Done. Processed $REPO_COUNT repos."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# =============================================================================
-# Warning Summary
-# =============================================================================
+# Warning summary
 if [[ $WARNING_COUNT -gt 0 ]]; then
     echo ""
     echo "╔══════════════════════════════════════════════════════════════════════════╗"
