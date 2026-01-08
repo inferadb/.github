@@ -1,9 +1,10 @@
-__Sub-millisecond authorization at any scale.__
+__High-performance, fine-grained authorization at scale.__
 
-InferaDB is a GPU-accelerated, self-optimizing authorization database with cryptographically verifiable audit trails.
+InferaDB is a hardware-accelerated, self-optimizing authorization database with cryptographically verifiable audit trails.
 
 - **Flexible** — ReBAC, RBAC, and ABAC in one system
 - **Extensible** — Visual policy design + WebAssembly
+- **Scalable** — Distributed compute, decentralized by design
 - **Proven** — Inspired by Google Zanzibar, built on AuthZEN
 
-Built in Rust. [Get started →](https://github.com/inferadb/inferadb)
+[Get started →](https://github.com/inferadb/inferadb)
