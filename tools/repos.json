@@ -322,7 +322,7 @@
 
   "repositories": {
     "inferadb/inferadb": {
-      "description": "High Performance Authorization Database",
+      "description": "The Authorization Database. High-performance, fine-grained access control at scale.",
       "labels": [
         {
           "name": "repo/engine",
@@ -395,7 +395,7 @@
     },
 
     "inferadb/engine": {
-      "description": "High Performance Authorization Database",
+      "description": "The Authorization Database. High-performance, fine-grained access control at scale.",
       "labels": [
         {
           "name": "area/policy",
