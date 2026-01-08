@@ -133,22 +133,6 @@
       },
 
       {
-        "name": "good-first-issue",
-        "color": "7057ff",
-        "description": "Good for newcomers"
-      },
-      {
-        "name": "help-wanted",
-        "color": "008672",
-        "description": "Extra attention needed"
-      },
-      {
-        "name": "hacktoberfest",
-        "color": "ff7518",
-        "description": "Hacktoberfest eligible"
-      },
-
-      {
         "name": "area/api",
         "color": "c5def5",
         "description": "REST/gRPC API"
