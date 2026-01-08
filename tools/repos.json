@@ -1,6 +1,7 @@
 {
   "$schema": "./repos.schema.json",
   "common": {
+    "homepage": "https://inferadb.com",
     "labels": [
       {
         "name": "kind/bug",
@@ -321,7 +322,7 @@
 
   "repositories": {
     "inferadb/inferadb": {
-      "description": "InferaDB — distributed fine-grained authorization with sub-millisecond latency",
+      "description": "High Performance Authorization Database",
       "labels": [
         {
           "name": "repo/engine",
@@ -394,7 +395,7 @@
     },
 
     "inferadb/engine": {
-      "description": "InferaDB engine — ReBAC with declarative policies, sub-millisecond latency",
+      "description": "High Performance Authorization Database",
       "labels": [
         {
           "name": "area/policy",

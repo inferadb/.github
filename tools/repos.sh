@@ -1009,6 +1009,19 @@ ensure_description() {
     fi
 }
 
+ensure_homepage() {
+    local repo="$1"
+    local homepage="$2"
+    local current="$3"
+
+    if [[ "$current" != "$homepage" ]]; then
+        echo "  ~ Updating homepage"
+        run_cmd gh repo edit "$repo" --homepage "$homepage"
+    else
+        echo "  ✓ Homepage matches"
+    fi
+}
+
 # Templates
 
 # Sync template file
@@ -1171,9 +1184,10 @@ process_repository() {
     fi
 
     if [[ "$DO_TOPICS" == "true" ]]; then
-        repo_json=$(gh repo view "$repo" --json description,repositoryTopics)
+        repo_json=$(gh repo view "$repo" --json description,homepageUrl,repositoryTopics)
         EXISTING_TOPICS=$(echo "$repo_json" | jq -r '.repositoryTopics // [] | .[].name')
         description_text=$(echo "$repo_json" | jq -r '.description // ""')
+        homepage_text=$(echo "$repo_json" | jq -r '.homepageUrl // ""')
     fi
 
     # Labels
@@ -1206,15 +1220,23 @@ process_repository() {
         cleanup_labels "$repo"
     fi
 
-    # Description and Topics
+    # Description, Homepage, and Topics
     if [[ "$DO_TOPICS" == "true" ]]; then
-        local target_description skip_common
+        local target_description target_homepage skip_common
         target_description=$(echo "$repo_config" | jq -r '.description')
+        # Homepage: use repo override if set, otherwise use common default
+        target_homepage=$(jq -r --arg repo "$repo" '
+            .repositories[$repo].homepage // .common.homepage // ""
+        ' "$CONFIG_FILE")
         skip_common=$(echo "$repo_config" | jq -r '.skip_common_topics // false')
 
         echo ""
         echo "  Description:"
         ensure_description "$repo" "$target_description" "$description_text"
+
+        echo ""
+        echo "  Homepage:"
+        ensure_homepage "$repo" "$target_homepage" "$homepage_text"
 
         echo ""
         echo "  Topics:"
