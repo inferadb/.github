@@ -337,7 +337,7 @@
 
   "repositories": {
     "inferadb/inferadb": {
-      "description": "Distributed ReBAC authorization engine — Zanzibar-inspired, AuthZEN compliant",
+      "description": "InferaDB — distributed fine-grained authorization with sub-millisecond latency",
       "labels": [
         {
           "name": "repo/engine",
@@ -410,7 +410,7 @@
     },
 
     "inferadb/engine": {
-      "description": "Authorization engine — ReBAC with declarative policies, sub-millisecond latency",
+      "description": "InferaDB engine — ReBAC with declarative policies, sub-millisecond latency",
       "labels": [
         {
           "name": "area/policy",
@@ -461,17 +461,29 @@
       "dependabot": {
         "cargo": {
           "ignore": [
-            { "dependency-name": "wasmtime*", "update-types": ["version-update:semver-major"] },
-            { "dependency-name": "foundationdb", "update-types": ["version-update:semver-major"] },
-            { "dependency-name": "tonic", "update-types": ["version-update:semver-major"] },
-            { "dependency-name": "prost", "update-types": ["version-update:semver-major"] }
+            {
+              "dependency-name": "wasmtime*",
+              "update-types": ["version-update:semver-major"]
+            },
+            {
+              "dependency-name": "foundationdb",
+              "update-types": ["version-update:semver-major"]
+            },
+            {
+              "dependency-name": "tonic",
+              "update-types": ["version-update:semver-major"]
+            },
+            {
+              "dependency-name": "prost",
+              "update-types": ["version-update:semver-major"]
+            }
           ]
         }
       }
     },
 
     "inferadb/control": {
-      "description": "Control plane — multi-tenant management with WebAuthn",
+      "description": "InferaDB control plane — multi-tenant administration with WebAuthn",
       "labels": [
         {
           "name": "area/tenancy",
@@ -519,22 +531,34 @@
       "dependabot": {
         "cargo": {
           "ignore": [
-            { "dependency-name": "foundationdb", "update-types": ["version-update:semver-major"] },
-            { "dependency-name": "tonic", "update-types": ["version-update:semver-major"] },
-            { "dependency-name": "prost", "update-types": ["version-update:semver-major"] }
+            {
+              "dependency-name": "foundationdb",
+              "update-types": ["version-update:semver-major"]
+            },
+            {
+              "dependency-name": "tonic",
+              "update-types": ["version-update:semver-major"]
+            },
+            {
+              "dependency-name": "prost",
+              "update-types": ["version-update:semver-major"]
+            }
           ]
         },
         "docker": {
           "directories": [
             { "path": "/" },
-            { "path": "/docker/fdb-integration-tests", "schedule": { "interval": "daily" } }
+            {
+              "path": "/docker/fdb-integration-tests",
+              "schedule": { "interval": "daily" }
+            }
           ]
         }
       }
     },
 
     "inferadb/dashboard": {
-      "description": "Dashboard — policy design, relationship visualization, tenant management",
+      "description": "InferaDB dashboard — tenant management, policy design, simulation, observability",
       "labels": [
         {
           "name": "area/ui",
@@ -564,7 +588,7 @@
     },
 
     "inferadb/tests": {
-      "description": "E2E tests — integration tests and Kubernetes deployment",
+      "description": "InferaDB E2E tests — Engine and Control in Kubernetes",
       "labels": [
         {
           "name": "area/k8s",
@@ -599,7 +623,7 @@
     },
 
     "inferadb/docs": {
-      "description": "Documentation — specs, deployment guides, design docs",
+      "description": "InferaDB documentation — specs, deployment guides, design docs",
       "labels": [
         {
           "name": "area/architecture",
@@ -637,14 +661,14 @@
     },
 
     "inferadb/cli": {
-      "description": "CLI — debug authorization, test policies, manage tenants",
+      "description": "InferaDB CLI — debug authorization, test policies, manage tenants",
       "labels": [],
       "topics": ["rust", "cli", "grpc", "rest-api", "jwt"],
       "ecosystems": ["cargo", "github-actions"]
     },
 
     "inferadb/teapot": {
-      "description": "Teapot — Rust TUI framework with Elm architecture",
+      "description": "Teapot — Rust TUI framework inspired by Bubble Tea",
       "labels": [
         {
           "name": "area/runtime",
@@ -688,22 +712,28 @@
       "dependabot": {
         "cargo": {
           "ignore": [
-            { "dependency-name": "crossterm", "update-types": ["version-update:semver-major"] },
-            { "dependency-name": "tokio", "update-types": ["version-update:semver-major"] }
+            {
+              "dependency-name": "crossterm",
+              "update-types": ["version-update:semver-major"]
+            },
+            {
+              "dependency-name": "tokio",
+              "update-types": ["version-update:semver-major"]
+            }
           ]
         }
       }
     },
 
     "inferadb/terraform-provider-inferadb": {
-      "description": "Terraform provider — manage orgs, vaults, clients, teams",
+      "description": "InferaDB Terraform provider — manage orgs, vaults, clients, teams",
       "labels": [],
       "topics": ["terraform", "provider", "grpc", "rest-api", "jwt"],
       "ecosystems": ["gomod", "github-actions"]
     },
 
     "inferadb/rust": {
-      "description": "Rust SDK — type-safe client for authorization APIs",
+      "description": "InferaDB Rust SDK — type-safe client for authorization APIs",
       "labels": [
         {
           "name": "area/client",
@@ -745,17 +775,29 @@
       "dependabot": {
         "cargo": {
           "ignore": [
-            { "dependency-name": "tonic", "update-types": ["version-update:semver-major"] },
-            { "dependency-name": "prost", "update-types": ["version-update:semver-major"] },
-            { "dependency-name": "reqwest", "update-types": ["version-update:semver-major"] },
-            { "dependency-name": "tokio", "update-types": ["version-update:semver-major"] }
+            {
+              "dependency-name": "tonic",
+              "update-types": ["version-update:semver-major"]
+            },
+            {
+              "dependency-name": "prost",
+              "update-types": ["version-update:semver-major"]
+            },
+            {
+              "dependency-name": "reqwest",
+              "update-types": ["version-update:semver-major"]
+            },
+            {
+              "dependency-name": "tokio",
+              "update-types": ["version-update:semver-major"]
+            }
           ]
         }
       }
     },
 
     "inferadb/proto": {
-      "description": "Protocol definitions — Protobuf schemas and gRPC services",
+      "description": "InferaDB protocol definitions — gRPC service definitions",
       "labels": [
         {
           "name": "area/proto",
@@ -789,7 +831,7 @@
     },
 
     "inferadb/deploy": {
-      "description": "Deployment — Kubernetes, Helm, Terraform, infrastructure",
+      "description": "InferaDB deployment — GitOps for multi-region, multi-cloud Kubernetes",
       "labels": [
         {
           "name": "area/k8s",
@@ -860,7 +902,7 @@
     },
 
     "inferadb/terraform": {
-      "description": "Terraform modules — multi-cloud FoundationDB with Tailscale mesh",
+      "description": "InferaDB Terraform modules — multi-cloud deployment",
       "labels": [
         {
           "name": "area/k8s",
@@ -918,7 +960,7 @@
     },
 
     "inferadb/.github": {
-      "description": "GitHub config — workflows, templates, automation",
+      "description": "InferaDB GitHub config — templates and repository management tools",
       "labels": [
         {
           "name": "area/workflows",
@@ -949,7 +991,7 @@
     },
 
     "inferadb/wasm": {
-      "description": "WebAssembly — portable policy evaluation for edge and browser",
+      "description": "InferaDB WebAssembly — portable policy evaluation for edge and browser",
       "labels": [
         {
           "name": "area/runtime",
