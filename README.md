@@ -13,11 +13,11 @@
 
 ## Overview
 
-This repository contains GitHub organization configuration and tooling for InferaDB:
+GitHub organization configuration and tooling for InferaDB:
 
-- **Organization Profile** — The README displayed on the [InferaDB GitHub organization](https://github.com/inferadb) page
-- **Shared Templates** — Common files synced across all repositories (licenses, security policy, etc.)
-- **Repository Tools** — Automation for managing settings, labels, and topics across all repos
+- **Organization Profile** — README for the [InferaDB GitHub organization](https://github.com/inferadb) page
+- **Shared Templates** — Common files synced across repos (licenses, security policy, etc.)
+- **Repository Tools** — Automation for managing settings, labels, and topics
 
 ## Structure
 
@@ -38,38 +38,38 @@ github/
 
 ## Repository Management
 
-The `repos.sh` script manages settings across all InferaDB repositories:
+`repos.sh` manages settings across all repositories:
 
 ```bash
 cd tools
 
-# Process all repositories (settings, labels, topics, templates)
+# All operations (settings, labels, topics, templates)
 ./repos.sh
 
 # Individual operations
-./repos.sh --settings      # Repository settings only
-./repos.sh --labels        # Labels only
-./repos.sh --topics        # Descriptions and topics only
-./repos.sh --templates     # Sync template files
+./repos.sh --settings      # Repository settings
+./repos.sh --labels        # Labels
+./repos.sh --topics        # Descriptions and topics
+./repos.sh --templates     # Template files
 ./repos.sh --dependabot    # Validate dependabot.yml
 
-# Preview changes without applying
+# Preview changes
 ./repos.sh --dry-run
 ./repos.sh --templates --dry-run
 ```
 
 ### Configuration
 
-Repository metadata is defined in `repos.json`:
+`repos.json` defines repository metadata:
 
-- Repository descriptions and topics
-- Label definitions (name, color, description)
-- Merge settings (squash, rebase, merge commit options)
+- Descriptions and topics
+- Labels (name, color, description)
+- Merge settings (squash, rebase, merge commit)
 - Security features (vulnerability alerts, automated fixes)
 
 ### Template Sync
 
-Template files in `tools/templates/` are synced to all repositories:
+Files in `tools/templates/` sync to all repositories:
 
 | File                 | Purpose                           |
 | -------------------- | --------------------------------- |
@@ -81,7 +81,7 @@ Template files in `tools/templates/` are synced to all repositories:
 
 ## Community
 
-Join us on [Discord](https://discord.gg/inferadb) to discuss InferaDB, get help with your projects, and connect with other developers. Whether you have questions, want to share what you're building, or are interested in contributing, we'd love to have you!
+Join us on [Discord](https://discord.gg/inferadb) to discuss InferaDB, get help, or share what you're building.
 
 ## License
 
