@@ -542,6 +542,54 @@
       }
     },
 
+    "inferadb/ledger": {
+      "description": "InferaDB ledger — persistent storage layer with decentralized blockchain for cryptographically verifiable auditing",
+      "labels": [
+        {
+          "name": "area/blockchain",
+          "color": "c9d1f5",
+          "description": "Blockchain"
+        },
+        {
+          "name": "area/consensus",
+          "color": "c9d1f5",
+          "description": "Consensus"
+        },
+        {
+          "name": "area/persistence",
+          "color": "c9d1f5",
+          "description": "Persistence"
+        },
+        {
+          "name": "area/audit",
+          "color": "c9d1f5",
+          "description": "Audit trails"
+        },
+        {
+          "name": "area/crypto",
+          "color": "c9d1f5",
+          "description": "Cryptography"
+        },
+        {
+          "name": "area/replication",
+          "color": "c9d1f5",
+          "description": "Replication"
+        }
+      ],
+      "topics": [
+        "rust",
+        "blockchain",
+        "database",
+        "storage",
+        "immutable-ledger",
+        "audit-log",
+        "cryptography",
+        "distributed-systems",
+        "grpc"
+      ],
+      "ecosystems": ["cargo", "github-actions", "docker"]
+    },
+
     "inferadb/dashboard": {
       "description": "InferaDB dashboard — tenant management, policy design, simulation, observability",
       "labels": [
