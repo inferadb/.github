@@ -1,10 +1,10 @@
-__High-performance, fine-grained authorization at scale.__
+__*in·fer·uh·db* (n.) — Authorization, solved.__
 
-InferaDB is a hardware-accelerated, self-optimizing authorization database with cryptographically verifiable audit trails.
+Hardware-accelerated, self-optimizing, cryptographically provable. Every decision is inferred from your policies, logic, and context — traceable and replayable.
 
-- **Flexible** — ReBAC, RBAC, and ABAC in one system
-- **Extensible** — Visual policy design + WebAssembly
-- **Scalable** — Distributed compute, decentralized by design
-- **Proven** — Inspired by Google Zanzibar, built on AuthZEN
+- **Flexibility** — ReBAC, RBAC, ABAC, visual policy design, WebAssembly
+- **Performance** — Hardware-accelerated, parallel distributed compute
+- **Operations** — Cryptographic audit trails, native observability
+- **Reliability** — Self-optimizing, self-healing
 
-[Get started →](https://github.com/inferadb/inferadb)
+Open standards. Never locked in. [Get started →](https://github.com/inferadb/inferadb)
