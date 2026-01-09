@@ -1,4 +1,4 @@
-__*in·fer·uh·db* (n.) — Authorization, solved.__
+__*in·fer·uh·dee·bee* (n.) — Authorization, solved.__
 
 High-performance, fine-grained authorization at scale. InferaDB uses hardware-accelerated graph traversal and distributed computing to infer access decisions from your relationships, attributes, policies, and context — every decision logged to an immutable ledger, cryptographically signed and replayable.
 
