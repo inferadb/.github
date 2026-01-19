@@ -1056,6 +1056,34 @@
         "edge-computing"
       ],
       "ecosystems": ["cargo", "github-actions"]
+    },
+
+    "inferadb/common": {
+      "description": "InferaDB common — shared Rust utilities, crates, and foundational libraries",
+      "labels": [
+        {
+          "name": "area/storage",
+          "color": "d4c5f9",
+          "description": "Storage utilities"
+        },
+        {
+          "name": "area/crates",
+          "color": "d4c5f9",
+          "description": "Shared crates"
+        },
+        {
+          "name": "area/utils",
+          "color": "d4c5f9",
+          "description": "Utilities"
+        }
+      ],
+      "topics": [
+        "rust",
+        "shared-library",
+        "utilities",
+        "crates"
+      ],
+      "ecosystems": ["cargo", "github-actions"]
     }
   }
 }
