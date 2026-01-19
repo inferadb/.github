@@ -451,10 +451,6 @@
               "update-types": ["version-update:semver-major"]
             },
             {
-              "dependency-name": "foundationdb",
-              "update-types": ["version-update:semver-major"]
-            },
-            {
               "dependency-name": "tonic",
               "update-types": ["version-update:semver-major"]
             },
@@ -517,10 +513,6 @@
         "cargo": {
           "ignore": [
             {
-              "dependency-name": "foundationdb",
-              "update-types": ["version-update:semver-major"]
-            },
-            {
               "dependency-name": "tonic",
               "update-types": ["version-update:semver-major"]
             },
@@ -534,7 +526,7 @@
           "directories": [
             { "path": "/" },
             {
-              "path": "/docker/fdb-integration-tests",
+              "path": "/docker/ledger-integration-tests",
               "schedule": { "interval": "daily" }
             }
           ]
@@ -956,11 +948,6 @@
           "name": "area/observability",
           "color": "f9d0c4",
           "description": "Observability"
-        },
-        {
-          "name": "area/fdb",
-          "color": "d4e5c9",
-          "description": "FoundationDB"
         },
         {
           "name": "area/tailscale",
